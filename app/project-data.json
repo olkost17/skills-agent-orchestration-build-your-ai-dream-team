@@ -1,0 +1,32 @@
+{
+  "projects": [
+    {
+      "name": "Contributor Hub",
+      "owner": "Maya Chen",
+      "status": "In progress",
+      "recentActivity": "Published the contributor onboarding checklist and requested feedback on the new issue templates.",
+      "priority": "High"
+    },
+    {
+      "name": "Design System Refresh",
+      "owner": "Jordan Williams",
+      "status": "Active",
+      "recentActivity": "Merged accessible form patterns and began documenting component migration examples.",
+      "priority": "Medium"
+    },
+    {
+      "name": "Release Automation",
+      "owner": "Priya Nair",
+      "status": "At risk",
+      "recentActivity": "Waiting on a permissions update before the final staging deployment can run.",
+      "priority": "Urgent"
+    },
+    {
+      "name": "Knowledge Base Cleanup",
+      "owner": "Alex Rivera",
+      "status": "Complete",
+      "recentActivity": "Archived outdated guides and linked the current troubleshooting articles from the README.",
+      "priority": "Low"
+    }
+  ]
+}

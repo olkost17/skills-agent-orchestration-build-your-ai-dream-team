@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Project Pulse</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="dashboard-header">
+        <div>
+          <p class="eyebrow">Team overview</p>
+          <h1>Project Pulse</h1>
+          <p class="lede">A quick, contributor-friendly view of what is moving, what needs attention, and who owns the next step.</p>
+        </div>
+      </header>
+
+      <section class="dashboard-summary" aria-labelledby="summary-heading">
+        <div>
+          <h2 id="summary-heading">Project snapshot</h2>
+          <p id="project-count">Loading project data…</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="projects-heading">
+        <h2 id="projects-heading">Projects</h2>
+        <div id="project-list" class="dashboard project-grid" aria-live="polite" aria-busy="true">
+          <p class="loading" role="status">Loading project data…</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const projectList = document.getElementById("project-list");
+        const projectCount = document.getElementById("project-count");
+        function showState(className, message) {
+          projectList.replaceChildren();
+          const state = document.createElement("p");
+          state.className = className;
+          state.setAttribute("role", "status");
+          state.textContent = message;
+          projectList.append(state);
+          projectList.setAttribute("aria-busy", "false");
+        }
+
+        function textValue(value) {
+          return typeof value === "string" && value.trim() ? value : "Not provided";
+        }
+
+        function addField(container, label, value) {
+          const wrapper = document.createElement("div");
+          const term = document.createElement("dt");
+          const description = document.createElement("dd");
+          term.textContent = label;
+          description.textContent = textValue(value);
+          wrapper.append(term, description);
+          container.append(wrapper);
+        }
+
+        function renderProject(project) {
+          const card = document.createElement("article");
+          card.className = "project-card";
+
+          const header = document.createElement("header");
+          header.className = "project-card__header";
+          const title = document.createElement("h3");
+          title.textContent = textValue(project.name);
+
+          const status = document.createElement("span");
+          status.className = "status-badge status-neutral";
+          status.dataset.status = textValue(project.status);
+          status.textContent = textValue(project.status);
+          header.append(title, status);
+
+          const body = document.createElement("div");
+          body.className = "project-card__body";
+          const metadata = document.createElement("dl");
+          metadata.className = "project-card__meta";
+          addField(metadata, "Owner", project.owner);
+          const priorityWrapper = document.createElement("div");
+          const priorityLabel = document.createElement("dt");
+          const priority = document.createElement("dd");
+          const priorityText = textValue(project.priority);
+          priorityLabel.textContent = "Priority";
+          priority.className = "priority-badge priority-neutral";
+          priority.dataset.priority = priorityText;
+          priority.textContent = priorityText;
+          priorityWrapper.append(priorityLabel, priority);
+          metadata.append(priorityWrapper);
+
+          const activity = document.createElement("p");
+          activity.className = "project-card__activity";
+          const activityLabel = document.createElement("strong");
+          activityLabel.textContent = "Recent activity";
+          const activityText = document.createElement("span");
+          activityText.textContent = textValue(project.recentActivity);
+          activity.append(activityLabel, activityText);
+
+          body.append(metadata, activity);
+          card.append(header, body);
+          return card;
+        }
+
+        function renderProjects(projects) {
+          if (projects.length === 0) {
+            projectCount.textContent = "No projects are currently available.";
+            showState("empty-state", "No projects to display yet.");
+            return;
+          }
+
+          projectCount.textContent = `${projects.length} project${projects.length === 1 ? "" : "s"} in view`;
+          projectList.replaceChildren(...projects.map(renderProject));
+          projectList.setAttribute("aria-busy", "false");
+        }
+
+        async function loadProjects() {
+          try {
+            const response = await fetch("project-data.json", { cache: "no-store" });
+            if (!response.ok) {
+              throw new Error(`Request failed with status ${response.status}`);
+            }
+            let data;
+            try {
+              data = await response.json();
+            } catch (error) {
+              projectCount.textContent = "Project data could not be read.";
+              showState("error-state", "Malformed project data: the JSON file could not be read.");
+              return;
+            }
+            if (!data || !Array.isArray(data.projects)) {
+              projectCount.textContent = "Project data could not be understood.";
+              showState("error-state", "Malformed project data: the projects list is missing or invalid.");
+              return;
+            }
+            if (data.projects.some((project) => !project || typeof project !== "object" || Array.isArray(project))) {
+              projectCount.textContent = "Project data could not be understood.";
+              showState("error-state", "Malformed project data: one or more project records are invalid.");
+              return;
+            }
+            renderProjects(data.projects);
+          } catch (error) {
+            projectCount.textContent = "Project data is unavailable.";
+            showState("error-state", "Unable to load project data. Use the Project Pulse static server and try again.");
+          }
+        }
+
+        loadProjects();
+      })();
+    </script>
+  </body>
+</html>
